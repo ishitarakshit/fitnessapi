@@ -1,41 +1,59 @@
 package com.practice.controller;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.practice.data.Weight;
-import com.practice.service.WeightService;
+import com.practice.data.Goal;
+import com.practice.data.User;
+import com.practice.service.UserService;
 
 @RestController
 @RequestMapping("/api")
 public class FitnessController {
 	
 	@Autowired
-	private WeightService weightService;
+	private UserService userService;
 
-	@RequestMapping(value = "/weight", method = RequestMethod.POST)
-	public Weight addWeightData(@RequestBody Weight inputData) {
-		Weight user = new Weight();
-		user.setUserName(inputData.getUserName());
-		user.setAmount(inputData.getAmount());
-		user.setUnit(inputData.getUnit());
-		user.setDateTime(new Date());
-		weightService.saveUserWeight(user);
-		return user;
+	@PostMapping(value = "/users")
+	public User addUser(@RequestBody User inputUser) {
+		return userService.saveUser(inputUser);
 	}
 	
-	@RequestMapping("/weights")
-	public List<Weight> getAllUserWeightData() {
-		return weightService.findAll();
+	@GetMapping("/users/{id}")
+	public User getUser(@PathVariable Long id) {
+		User user = userService.findOne(id);
+		if(user != null) {
+			return user;
+		}
+		return null;
 	}
+	
+	@PostMapping(value = "/users/{id}/goals")
+	public User addGoal(@PathVariable Long id, @RequestBody Goal newGoal) {
+		User user = userService.findOne(id);
+		if(user != null) {
+			Set<Goal> currentGoals = user.getGoals() == null ? new HashSet<>() : user.getGoals();
+			currentGoals.add(newGoal);
+			return userService.saveUser(user);
+		}
+		return null;
+	}
+	
+	@GetMapping("/users/{id}/goals")
+	public Set<Goal> getUserGoals(@PathVariable Long id) {
+		User user = userService.findOne(id);
+		if(user != null) {
+			return user.getGoals();
+		}
+		return null;
+	}
+	
 }
